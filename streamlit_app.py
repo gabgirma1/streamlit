@@ -9,10 +9,6 @@ st.write("### Input Data and Examples")
 df = pd.read_csv("Superstore_Sales_utf8.csv", parse_dates=True)
 st.dataframe(df)
 
-selected_cat = st.selectbox(label="1. Select a Category:", options=df["Category"].unique(), index=0, format_func=str, key="category_select_key", help="Filter the entire page analytics by selecting a product category.", on_change=None, args=None, kwargs=None, placeholder="Choose a category...", disabled=False, label_visibility="visible", accept_new_options=False, filter_mode="fuzzy", width="stretch", bind=None, persist_state=None)
-selected_subs = st.multiselect(label="2. Select Sub-Categories:", options=df[df["Category"] == selected_cat]["Sub_Category"].unique(), default=list(df[df["Category"] == selected_cat]["Sub_Category"].unique()), format_func=str, key="sub_category_select_key", help="Select specific sub-categories to analyze.", on_change=None, args=None, kwargs=None, max_selections=None, placeholder="Choose sub-categories...", disabled=False, label_visibility="visible", accept_new_options=False, filter_mode="fuzzy", select_all=1000, width="stretch", wrap=None, bind=None, persist_state=None)
-df_final = df[(df["Category"] == selected_cat) & (df["Sub_Category"].isin(selected_subs))]
-
 # This bar chart will not have solid bars--but lines--because the detail data is being graphed independently
 st.bar_chart(df, x="Category", y="Sales")
 
@@ -32,6 +28,36 @@ st.dataframe(sales_by_month)
 
 # Here the grouped months are the index and automatically used for the x axis
 st.line_chart(sales_by_month, y="Sales")
+
+global_total_sales = df["Sales"].sum()
+global_total_profit = df["Profit"].sum()
+global_margin = (global_total_profit / global_total_sales) * 100 if global_total_sales != 0 else 0
+
+selected_cat = st.selectbox(label="1. Select a Category:", options=df["Category"].unique(), index=0, format_func=str, key="category_select_key", help="Filter the entire page analytics by selecting a product category.", on_change=None, args=None, kwargs=None, placeholder="Choose a category...", disabled=False, label_visibility="visible", accept_new_options=False, filter_mode="fuzzy", width="stretch", bind=None, persist_state=None)
+
+sub_options = df[df["Category"] == selected_cat]["Sub_Category"].unique()
+selected_subs = st.multiselect(label="2. Select Sub-Categories:", options=sub_options, default=list(sub_options), format_func=str, key="sub_category_select_key", help="Select specific sub-categories to analyze.", on_change=None, args=None, kwargs=None, max_selections=None, placeholder="Choose sub-categories...", disabled=False, label_visibility="visible", accept_new_options=False, filter_mode="fuzzy", select_all=1000, width="stretch", wrap=None, bind=None, persist_state=None)
+
+df_final = df[(df["Category"] == selected_cat) & (df["Sub_Category"].isin(selected_subs))].copy()
+
+if not df_final.empty:
+    # Compute active metrics
+    total_sales_val = df_final["Sales"].sum()
+    total_profit_val = df_final["Profit"].sum()
+    current_margin = (total_profit_val / total_sales_val) * 100 if total_sales_val != 0 else 0
+    margin_delta = current_margin - global_margin
+
+    col1, col2, col3 = st.columns(3)
+    col1.metric(label="Total Sales", value=f"${total_sales_val:,.2f}")
+    col2.metric(label="Total Profit", value=f"${total_profit_val:,.2f}")
+    col3.metric(label="Overall Profit Margin", value=f"{current_margin:.2f}%", delta=f"{margin_delta:+.2f}% vs Global Avg")
+
+    df_final["Order_Date"] = pd.to_datetime(df_final["Order_Date"])
+    sales_trend = df_final.set_index("Order_Date").filter(items=["Sales"]).groupby(pd.Grouper(freq="ME")).sum()
+    st.line_chart(sales_trend, y="Sales")
+else:
+    st.warning("Please pick at least one sub-category to view analytics.")
+
 
 st.write("## Your additions")
 st.write("### (1) add a drop down for Category (https://docs.streamlit.io/library/api-reference/widgets/st.selectbox)")
