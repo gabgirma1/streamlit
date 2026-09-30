@@ -52,8 +52,13 @@ if not df_final.empty:
     col2.metric(label="Total Profit", value=f"${total_profit_val:,.2f}")
     col3.metric(label="Overall Profit Margin", value=f"{current_margin:.2f}%", delta=f"{margin_delta:+.2f}% vs Global Avg")
 
-    df_final["Order_Date"] = pd.to_datetime(df_final["Order_Date"])
-    sales_trend = df_final.set_index("Order_Date").filter(items=["Sales"]).groupby(pd.Grouper(freq="ME")).sum()
+    if "Order_Date" in df_final.columns:
+        df_final["Order_Date"] = pd.to_datetime(df_final["Order_Date"])
+        sales_trend = df_final.set_index("Order_Date").filter(items=["Sales"]).groupby(pd.Grouper(freq="ME")).sum()
+    else:
+        # If 'Order_Date' is already the index, group by it directly
+        sales_trend = df_final.filter(items=["Sales"]).groupby(pd.Grouper(freq="ME")).sum()
+        
     st.line_chart(sales_trend, y="Sales")
 else:
     st.warning("Please pick at least one sub-category to view analytics.")
