@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import math
 
-st.title("Data App Assignment, on July 14th")
+st.title("Data App Assignment, due on October 6th")
 
 st.write("### Input Data and Examples")
 df = pd.read_csv("Superstore_Sales_utf8.csv", parse_dates=True)
@@ -49,7 +49,7 @@ if not df_final.empty:
     col1, col2, col3 = st.columns(3)
     col1.metric(label="Total Sales", value=f"${total_sales_val:,.2f}")
     col2.metric(label="Total Profit", value=f"${total_profit_val:,.2f}")
-    col3.metric(label="Overall Profit Margin", value=f"{current_margin:.2f}%", delta=f"{margin_delta:+.2f}% vs Overall Avg Profit")
+    col3.metric(label="Overall Profit Margin", value=f"{current_margin:.2f}%", delta=f"{margin_delta:+.2f}% vs Global Avg")
 
     if "Order_Date" in df_final.columns:
         df_final["Order_Date"] = pd.to_datetime(df_final["Order_Date"])
