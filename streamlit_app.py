@@ -41,7 +41,6 @@ selected_subs = st.multiselect(label="2. Select Sub-Categories:", options=sub_op
 df_final = df[(df["Category"] == selected_cat) & (df["Sub_Category"].isin(selected_subs))].copy()
 
 if not df_final.empty:
-    # Compute active metrics
     total_sales_val = df_final["Sales"].sum()
     total_profit_val = df_final["Profit"].sum()
     current_margin = (total_profit_val / total_sales_val) * 100 if total_sales_val != 0 else 0
@@ -50,18 +49,17 @@ if not df_final.empty:
     col1, col2, col3 = st.columns(3)
     col1.metric(label="Total Sales", value=f"${total_sales_val:,.2f}")
     col2.metric(label="Total Profit", value=f"${total_profit_val:,.2f}")
-    col3.metric(label="Overall Profit Margin", value=f"{current_margin:.2f}%", delta=f"{margin_delta:+.2f}% vs Global Avg")
+    col3.metric(label="Overall Profit Margin", value=f"{current_margin:.2f}%", delta=f"{margin_delta:+.2f}% vs Overall Avg Profit")
 
     if "Order_Date" in df_final.columns:
         df_final["Order_Date"] = pd.to_datetime(df_final["Order_Date"])
         sales_trend = df_final.set_index("Order_Date").filter(items=["Sales"]).groupby(pd.Grouper(freq="ME")).sum()
     else:
-        # If 'Order_Date' is already the index, group by it directly
         sales_trend = df_final.filter(items=["Sales"]).groupby(pd.Grouper(freq="ME")).sum()
         
     st.line_chart(sales_trend, y="Sales")
 else:
-    st.warning("Please pick at least one sub-category to view analytics.")
+    st.warning("Pick at least one sub-category to view analytics.")
 
 
 st.write("## Your additions")
